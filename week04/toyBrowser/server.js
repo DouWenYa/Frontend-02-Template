@@ -10,7 +10,7 @@ http.createServer(
       body = Buffer.concat(body).toString();
       console.log("body", body)
       res.writeHead(200, {
-        'content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'text/plain'
       })
       res.end("hello toyBrowser")
     })
