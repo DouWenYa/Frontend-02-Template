@@ -1,5 +1,6 @@
 学习笔记
-1、html语义化标签
+1、html 语义化标签
+
 <aside>
 <main>页面只有一个，主体部分 
 <nav>
@@ -68,6 +69,3 @@ Node：
 layout
  getClientRacts()
  getBoundingClientRact()
-
-
-
