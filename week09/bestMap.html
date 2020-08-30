@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <style>
+    #container {
+      width: 701px;
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .cell {
+      width: 6px;
+      height: 6px;
+      border-right: 1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+      background-color: #ccc;
+    }
+
+    .cell.bg {
+      background-color: black;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container"></div>
+  <button id="btn">保存</button>
+  <script type="module">
+    const box = document.getElementById('container')
+    const btn = document.getElementById('btn')
+    let map = localStorage.getItem('map')
+      ? JSON.parse(localStorage.getItem('map'))
+      : Array(10000).fill(0)
+    const sleep = (t) => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve()
+        }, t)
+      })
+    }
+    class Sorted {
+      constructor(data, compare) {
+        this.data = [...data]
+        this.compare = compare || ((a, b) => a - b)
+      }
+      take() {
+        if (!this.data.length) {
+          return
+        }
+        let min = this.data[0]
+        let minIndex = 0
+        for (let i = 0; i < this.data.length; i++) {
+          if (this.compare(min, this.data[i]) > 0) {
+            min = this.data[i]
+            minIndex = i
+          }
+        }
+        this.data[minIndex] = this.data[this.data.length - 1]
+        this.data.pop()
+        return min
+      }
+      give(v) {
+        this.data.push(v)
+      }
+    }
+
+    for (let i = 0; i < 100; i++) {
+      for (let j = 0; j < 100; j++) {
+        const div = document.createElement('div')
+        div.classList.add('cell')
+        if (map[100 * i + j] === 1) {
+          div.classList.add('bg')
+        }
+        div.addEventListener('mousemove', () => {
+          if (mouseDown) {
+            if (clear) {
+              map[100 * i + j] = 0
+              div.classList.remove('bg')
+            } else {
+              map[100 * i + j] = 1
+              div.classList.add('bg')
+            }
+          }
+        })
+        box.appendChild(div)
+      }
+    }
+    let mouseDown = false
+    let clear = false
+    document.addEventListener('mousedown', (e) => {
+      mouseDown = true
+      clear = e.which === 3
+    })
+    document.addEventListener('mouseup', (e) => {
+      mouseDown = false
+    })
+    document.addEventListener('contextmenu', (e) => {
+      //阻止右键出现菜单
+      // e.preventDefault()
+    })
+    btn.addEventListener('click', () => {
+      localStorage.setItem('map', JSON.stringify(map))
+    })
+    async function seekPath(map, start, end) {
+      let table = Object.create(map)
+      function distance(pos) {
+        return (pos[0] - end[0]) ** 2 + (pos[1] - end[1]) ** 2 //(x1-x2)^2 + (y1-y2)^2
+      }
+      let queue = new Sorted([start], (a, b) => distance(a) - distance(b)) //起点放入队列
+      async function insert(x, y, pre) {
+        if (x < 0 || y < 0 || x > 100 || y > 100) {
+          //地图边界终止
+          return
+        }
+        if (table[100 * y + x]) {
+          //若果当前位置有值
+          return
+        }
+        await sleep(10)
+        box.children[100 * y + x].style.backgroundColor = 'green'
+        table[100 * y + x] = pre //当前位置没值，
+        queue.give([x, y]) //位置放入队列
+      }
+      while (queue.data.length) {
+        let [x, y] = queue.take()
+        console.log(x, y)
+        if (x === end[0] && y === end[1]) {
+          //已经找到终点
+          let path = []
+          while (x !== start[0] && y !== start[1]) {
+            path.push(map[100 * y + x])
+            [x, y] = table[100 * y + x]
+          }
+          console.log(path)
+          box.children[100 * y + x].style.backgroundColor = 'red'
+          return path
+        }
+        console.log(x, y)
+        await insert(x + 1, y, [x, y]) //right
+        await insert(x, y + 1, [x, y]) //bottom
+        await insert(x - 1, y, [x, y]) //left
+        await insert(x, y - 1, [x, y]) //top
+
+        await insert(x + 1, y + 1, [x, y]) //right
+        await insert(x - 1, y - 1, [x, y]) //bottom
+        await insert(x - 1, y + 1, [x, y]) //left
+        await insert(x + 1, y - 1, [x, y]) //top
+      }
+    }
+    seekPath(map, [1, 1], [20, 30])
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .board {
+        width: 30vw;
+        height: 30vw;
+        background: green;
+      }
+      .cell {
+        box-sizing: border-box;
+        float: left;
+        width: 10vw;
+        height: 10vw;
+        border: 1px solid #fff;
+        font-size: 50px;
+        color: red;
+        text-align: center;
+        line-height: 10vw;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="board"></div>
+    <script type="module">
+      const checker = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+      ]
+      let color = Math.random() > 0.5 ? 1 : 2
+      const board = document.getElementsByClassName('board')[0]
+      let show = () => {
+        board.innerHTML = ''
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            let Div = document.createElement('div')
+            Div.classList.add('cell')
+            const text =
+              checker[i][j] === 2 ? '○' : checker[i][j] === 1 ? '×' : ''
+            Div.innerHTML = text
+            Div.addEventListener('click', (e) => {
+              if (e.target.innerHTML) return
+              userMove(j, i)
+            })
+            board.appendChild(Div)
+          }
+
+          board.appendChild(document.createElement('br'))
+        }
+      }
+      const check = (checker, color) => {
+        {
+          for (let i = 0; i < 3; i++) {
+            let win = true
+            for (let j = 0; j < 3; j++) {
+              if (checker[i][j] !== color) {
+                //检查行是否一致
+                win = false
+              }
+            }
+            if (win) {
+              return win
+            }
+          }
+        }
+        {
+          for (let i = 0; i < 3; i++) {
+            let win = true
+            for (let j = 0; j < 3; j++) {
+              if (checker[j][i] !== color) {
+                //检查列是否一致
+                win = false
+              }
+            }
+            if (win) {
+              return win
+            }
+          }
+        }
+        {
+          let win = true
+          for (let i = 0; i < 3; i++) {
+            if (checker[i][i] !== color) {
+              //检查正斜角是否一致
+              win = false
+            }
+          }
+          if (win) {
+            return win
+          }
+        }
+        {
+          let win = true
+          for (let i = 0; i < 3; i++) {
+            if (checker[i][2 - i] !== color) {
+              //检查反斜角是否一致
+              win = false
+            }
+          }
+          if (win) {
+            return win
+          }
+        }
+        return false
+      }
+      const userMove = (x, y) => {
+        checker[y][x] = color
+        if (check(checker, color)) {
+          const text = color === 2 ? 'o' : '×'
+          alert(`${text} is winner`)
+        }
+        color = 3 - color
+        show()
+        setTimeout(() => {
+          computerMove()
+        }, 1000)
+        if (willWin(checker, color)) {
+          const text = color === 2 ? 'o' : '×'
+          console.log(`${text} will winner`)
+        }
+        console.log(bestChoise(checker, color))
+      }
+      function computerMove() {
+        let rt = bestChoise(checker, color)
+        if (rt.point) {
+          let [i, j] = rt.point
+          checker[j][i] = color
+        }
+        if (check(checker, color)) {
+          const text = color === 2 ? 'o' : '×'
+          alert(`${text} is winner`)
+        }
+        color = 3 - color
+        show()
+      }
+      function willWin(checker, color) {
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (checker[i][j]) continue
+            let temp = JSON.parse(JSON.stringify(checker))
+            temp[i][j] = color
+            if (check(temp, color)) {
+              return [j, i] //坐标
+            }
+          }
+        }
+        return null
+      }
+      function bestChoise(checker, color) {
+        let p = willWin(checker, color)
+        if (p) {
+          //即将win
+          return {
+            point: p,
+            result: 1, //1:win;0:ping;-1：lose
+          }
+        }
+        let result = -2 //设置默认初始值
+        let point = null
+        outer: for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (checker[i][j]) continue
+            let temp = JSON.parse(JSON.stringify(checker))
+            temp[i][j] = color
+            let rt = bestChoise(temp, 3 - color).result //对方最好的结果
+            if (-rt > result) {
+              result = -rt //对方最差的结果
+              point = [j, i]
+            }
+            if (result === 1) {
+              break outer
+            }
+          }
+        }
+        return {
+          point,
+          result: point ? result : 0,
+        }
+      }
+      show()
+    </script>
+  </body>
+</html>
