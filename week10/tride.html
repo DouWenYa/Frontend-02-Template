@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script type="module">
+    function generateWord(len) {
+      let arr = Array(len).fill('')
+      return arr.reduce((str, cur) => {
+        return str + String.fromCharCode(Math.random() * 26 + 'a'.charCodeAt())
+      }, '')
+    }
+    let $ = Symbol();
+    class Tride {
+      constructor() {
+        this.root = Object.create(null)
+      }
+      insert(word) {
+        let node = this.root
+        for (const p of word) {
+          if (!node[p]) {
+            node[p] = Object.create(null)
+          }
+          node = node[p]
+        }
+        if (!($ in node)) {
+          node[$] = 0
+        }
+        node[$]++
+      }
+      findMost() {
+        let max = 0;
+        let maxWord = null
+        function find(node, word) {
+          if (node[$] && node[$] > max) {
+            max = node[$]
+            maxWord = word
+          }
+          for (const p in node) {
+            find(node[p], word + p)
+          }
+        }
+        find(this.root, '')
+        return [maxWord, max]
+      }
+    }
+    const tride = new Tride
+    for (let i = 0; i < 1000; i++) {
+      tride.insert(generateWord(3))
+    }
+    console.log(tride.root, tride.findMost())
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script type='module'>
+    const reg = /(\d+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g
+    const flag = ['Number', 'whiteSpace', 'lineTerminator', '*', '/', '+', '-']
+    function* token(expression) {
+      let lastIndex = 0;
+
+      let result = null
+      while (true) {
+        lastIndex = reg.lastIndex
+        result = reg.exec(expression)
+        let token = {}
+        if (!result) {
+          break
+        }
+        if (reg.lastIndex - lastIndex > result[0].length) {
+          throw new Error('格式不正确')
+        }
+        for (let i = 1; i <= flag.length; i++) {
+          if (result[i]) {
+            token.type = flag[i - 1]
+            token.value = result[i]
+          }
+        }
+        yield token
+      }
+      yield { type: 'EOF' }
+    }
+    token()
+    let source = [...token('12*10/4 ')]
+    function MutiplicativeExpression(source) {
+      if (source[0].type === 'Number') {
+        const node = {
+          type: 'MutiplicativeExpression',
+          children: []
+        }
+        node.children.push(source[0])
+        source[0] = node
+        return MutiplicativeExpression(source)
+      }
+      if (source[0].type === 'MutiplicativeExpression' && source[1] && source[1].type === '*') {
+        const node = {
+          type: 'MutiplicativeExpression',
+          operator: '*',
+          children: []
+        }
+        node.children.push(source.shift())
+        node.children.push(source.shift())
+        node.children.push(source.shift())
+        source.unshift(node)
+        return MutiplicativeExpression(source)
+      }
+      if (source[0].type === 'MutiplicativeExpression' && source[1] && source[1].type === '/') {
+        const node = {
+          type: 'MutiplicativeExpression',
+          operator: '/',
+          children: []
+        }
+        node.children.push(source.shift())
+        node.children.push(source.shift())
+        node.children.push(source.shift())
+        source.unshift(node)
+        return MutiplicativeExpression(source)
+      }
+      if (source[0].type === 'MutiplicativeExpression') {
+        return source[0]
+      }
+    }
+    console.log(MutiplicativeExpression(source))
+
+    // 加减
+    source = [...token('1+2-3 ')]
+    function AdditiveExpression(source) {
+      if (source[0].type === 'MutiplicativeExpression') {
+        const node = {
+          type: 'AdditiveExpression',
+          children: []
+        }
+        node.children.push(source[0])
+        source[0] = node
+        return AdditiveExpression(source)
+      }
+      if (source[0].type === 'AdditiveExpression' && source[1] && source[1].type === '+') {
+        const node = {
+          type: 'AdditiveExpression',
+          operator: '+',
+          children: []
+        }
+        node.children.push(source.shift())
+        node.children.push(source.shift())
+        //转换第三个数字为产生式
+        MutiplicativeExpression(source)
+        node.children.push(source.shift())
+        source.unshift(node)
+        return AdditiveExpression(source)
+      }
+      if (source[0].type === 'AdditiveExpression' && source[1] && source[1].type === '-') {
+        const node = {
+          type: 'AdditiveExpression',
+          operator: '-',
+          children: []
+        }
+        node.children.push(source.shift())
+        node.children.push(source.shift())
+        MutiplicativeExpression(source)
+        node.children.push(source.shift())
+        source.unshift(node)
+        return AdditiveExpression(source)
+      }
+      if (source[0].type === 'AdditiveExpression') {
+        return source[0]
+      }
+      MutiplicativeExpression(source)
+      return AdditiveExpression(source)
+    }
+    console.log(AdditiveExpression(source))
+    function Expression(source) {
+      if (source[0].type === 'AdditiveExpression' && source[1].type === 'EOF') {
+        let node = {
+          type: 'Expression',
+          children: [source.shift(), source.shift()]
+        }
+        source.unshift(node)
+        return node
+      }
+      AdditiveExpression(source)
+      return Expression(source)
+    }
+  </script>
+</body>
+
+</html>
