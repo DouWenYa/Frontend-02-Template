@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #container {
+      user-select: none;
+    }
+
+    #drag-box {
+      width: 20vw;
+      height: 20vw;
+      background-color: green;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    我们通常所说的单页面应用程序通常通过前端框架（angular、react、vue）进行开发，单页面应用程序将所有的活动局限于一个Web页面中，仅在该Web页面初始化时加载相应的HTML、JavaScript 和
+    CSS。一旦页面加载完成了，SPA不会因为用户的操作而进行页面的重新加载或跳转。取而代之的是利用 JavaScript 动态的变换HTML的内容，从而实现UI与用户的交互。由于避免了页面的重新加载，SPA
+    可以提供较为流畅的用户体验。
+  </div>
+  <div id="drag-box"></div>
+  <script type="module">
+    const dragBox = document.getElementById("drag-box")
+    let originX = 0, originY = 0;
+    dragBox.addEventListener("mousedown", e => {
+      let startX = e.pageX, startY = e.pageY
+      let up = (e) => {
+        originX = originX + e.pageX - startX
+        originY = originY + e.pageY - startY
+        document.removeEventListener("mousemove", move)
+        document.removeEventListener("mouseup", up)
+      }
+      let move = (e) => {
+        //console.log(e.clientX)
+        let range = findNearBy(e.clientX, e.clientY)
+        range.insertNode(dragBox)
+        // dragBox.style.transform = `translate(${originX + e.pageX - startX}px,${originY + e.pageY - startY}px)`
+      }
+      document.addEventListener("mousemove", move)
+      document.addEventListener("mouseup", up)
+    })
+    let Container = document.getElementById('container')
+    let ranges = []
+    for (let i = 0; i < Container.childNodes[0].textContent.length; i++) {
+      let range = document.createRange()
+      range.setStart(Container.childNodes[0], i)
+      range.setEnd(Container.childNodes[0], i)
+      // console.log(range)
+      ranges.push(range)
+    }
+    function findNearBy(m, n) {
+      let min = Infinity ///无穷大
+      let nearBy = null
+      for (const range of ranges) {
+        const { x, y } = range.getBoundingClientRect()
+        let distance = (m - x) ** 2 + (n - y) ** 2
+        if (distance < min) {
+          min = distance;
+          nearBy = range
+        }
+      }
+      return nearBy
+    }
+  </script>
+</body>
+
+</html>

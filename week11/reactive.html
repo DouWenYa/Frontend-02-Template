@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script type="module">
+    let callbacks = new Map();
+    let reactives = [];
+    let proxys = new Map();
+    var obj = reactive({ a: { x: 1 }, b: 2 })
+    window.obj = obj //在浏览器调试用
+    effect(() => {
+      console.log(obj.a.x)
+    })
+    function effect(fn) {
+      reactives = [] //清空
+      fn() //操作obj更改会触发proxy的相应方法
+      for (const reactivity of reactives) {
+        if (!callbacks.has(reactivity[0])) {
+          callbacks.set(reactivity[0], new Map())
+        }
+        if (!callbacks.get(reactivity[0]).has(reactivity[1])) {
+          callbacks.get(reactivity[0]).set(reactivity[1], [])
+        }
+        callbacks.get(reactivity[0]).get(reactivity[1]).push(fn)
+      }
+    }
+    function reactive(obj) {
+      if (proxys.has(obj)) {
+        return proxys.get(obj)
+      }
+      let proxy = new Proxy(obj, {
+        get(obj, prop) {
+          console.log('get', obj, prop)
+          if (Object.prototype.toString.call(obj[prop]) === "[object Object]") {
+            reactive(obj[prop])
+          }
+          reactives.push([obj, prop])
+          return obj[prop]
+        },
+        set(obj, prop, val) {
+          obj[prop] = val
+          console.log('set', obj, prop)
+          if (callbacks.has(obj) && callbacks.get(obj).has(prop)) {
+            for (const fn of callbacks.get(obj).get(prop)) {
+              console.log('fn', fn)
+              fn()
+            }
+          }
+          return obj[prop]
+        }
+      })
+      proxys.set(obj, proxy)
+      return proxy
+    }
+
+
+  </script>
+</body>
+
+</html>
