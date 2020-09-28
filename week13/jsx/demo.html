@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #el {
+      width: 100px;
+      height: 100px;
+      background-color: chartreuse;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="el"></div>
+  <button id="pouse">暂停</button>
+  <!-- <button id="resume">继续</button> -->
+  <script type="module">
+    import { TimeLine, Animation } from './animation.js'
+    import { ease, easeIn, linear } from './timeFn.js'
+    let T = new TimeLine()
+    T.add(new Animation(document.getElementById('el').style, 'transform', 0, 500, 3000, 10, linear, v => `translate(${v}px)`))
+    T.start()
+
+    let action = 'pouse'
+    document.getElementById("pouse").addEventListener("click", function (e) {
+      if (action === 'pouse') {
+        action = 'resume'
+        this.innerHTML = '继续'
+        T.pouse()
+      } else {
+        action = 'pouse'
+        this.innerHTML = '暂停'
+        T.resume()
+      }
+    })
+   // document.getElementById("resume").addEventListener("click", resume)
+  </script>
+</body>
+
+</html>
